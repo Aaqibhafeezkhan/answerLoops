@@ -10,7 +10,9 @@ export async function saveEmbedding(ticketId: number, vector: number[], model: s
     .values({ ticketId, vector: JSON.stringify(vector), model })
     .onConflictDoUpdate({
       target: ticketEmbeddings.ticketId,
-      set: { vector: JSON.stringify(vector), model },
+      // A fresh vector supersedes anything the re-embed job staged from the
+      // old text (lib/kb/embedding-migration.ts).
+      set: { vector: JSON.stringify(vector), model, vectorNext: null, modelNext: null },
     })
 }
 
@@ -19,7 +21,13 @@ export async function getCandidateVectors(excludeTicketId: number, orgId: number
     .select({ ticket_id: ticketEmbeddings.ticketId, vector: ticketEmbeddings.vector })
     .from(ticketEmbeddings)
     .innerJoin(tickets, eq(tickets.id, ticketEmbeddings.ticketId))
-    .where(and(ne(ticketEmbeddings.ticketId, excludeTicketId), eq(tickets.orgId, orgId)))
+    .where(and(
+      ne(ticketEmbeddings.ticketId, excludeTicketId),
+      eq(tickets.orgId, orgId),
+      // Only vectors on the workspace's pinned embedding model, so a model
+      // change never compares two vector spaces (lib/ai/embedding-pin.ts).
+      sql`${ticketEmbeddings.model} = (SELECT embedding_model_in_use FROM orgs WHERE id = ${orgId})`,
+    ))
   return rows.map((r) => ({ ticket_id: r.ticket_id, vector: JSON.parse(r.vector) as number[] }))
 }
 

@@ -48,6 +48,11 @@ export async function createArticle(
           embedding: JSON.stringify(input.embedding),
           embeddingVec: input.embedding,
           model: input.model,
+          // A fresh vector supersedes anything the re-embed job staged from
+          // the old text (lib/kb/embedding-migration.ts).
+          embeddingNext: null,
+          embeddingVecNext: null,
+          modelNext: null,
           published: 1,
           updatedAt: new Date().toISOString(),
         })
@@ -133,6 +138,10 @@ export async function searchArticles(vector: number[], limit = 10, orgId: number
         eq(kbArticles.published, 1),
         eq(kbArticles.orgId, orgId),
         isNotNull(kbArticles.embeddingVec),
+        // Only rows on the workspace's pinned embedding model: a row from any
+        // other model is skipped until the re-embed job moves it, so two
+        // models never meet in one similarity score (lib/ai/embedding-pin.ts).
+        sql`${kbArticles.model} = (SELECT embedding_model_in_use FROM orgs WHERE id = ${orgId})`,
         sql`${distance} <= ${maxDistance}`
       )
     )
@@ -231,6 +240,11 @@ export async function upsertArticleFromSource(
         embedding: JSON.stringify(input.embedding),
         embeddingVec: input.embedding,
         model: input.model,
+        // A fresh vector supersedes anything the re-embed job staged from
+        // the old text (lib/kb/embedding-migration.ts).
+        embeddingNext: null,
+        embeddingVecNext: null,
+        modelNext: null,
         published: 1,
         updatedAt: new Date().toISOString(),
       })
