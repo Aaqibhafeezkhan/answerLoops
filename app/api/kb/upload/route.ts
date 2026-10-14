@@ -9,6 +9,7 @@ import { createKBSource, updateKBSourceChunkCount } from '@/lib/db/queries/kb-so
 import { rateLimitShared } from '@/lib/ratelimit'
 import { readBodyBytesCapped } from '@/lib/http/read-body-capped'
 import { logger } from '@/lib/logger'
+import { MAX_ARTICLES_PER_ORG } from '@/lib/kb/limits'
 
 const MOD = 'api/kb/upload'
 const MAX_FILE_BYTES = 10 * 1024 * 1024 // 10 MB
@@ -16,7 +17,6 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024 // 10 MB
 const MULTIPART_OVERHEAD_BYTES = 64 * 1024
 const MAX_REQUEST_BYTES = MAX_FILE_BYTES + MULTIPART_OVERHEAD_BYTES
 const TOO_LARGE_MESSAGE = 'File too large. Max size is 10 MB.'
-const MAX_ARTICLES_PER_ORG = 2000
 const MAX_CHUNKS_PER_FILE = 200
 
 export async function POST(req: NextRequest) {
