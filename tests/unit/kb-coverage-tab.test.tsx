@@ -10,7 +10,7 @@ import type { Coverage } from '@/lib/kb/coverage'
  * per URL so each test controls both endpoints.
  */
 
-const coverage: Coverage = {
+const coverage: Coverage & { articleUsage: Array<{ article_id: number; total: number; recent: number }> } = {
   summary: { total: 4, live: 2, unpublished: 1, notSearchable: 1, sources: 2 },
   groups: [
     {
@@ -37,6 +37,10 @@ const coverage: Coverage = {
     },
   ],
   truncated: false,
+  articleUsage: [
+    { article_id: 1, total: 12, recent: 3 },
+    { article_id: 4, total: 2, recent: 1 },
+  ],
 }
 
 const h = vi.hoisted(() => ({ fetchMock: vi.fn() }))
@@ -91,6 +95,11 @@ describe('CoverageTab: what the assistant knows', () => {
     expect(within(rows[1]).getByText('Unpublished')).toBeTruthy()
     expect(within(rows[2]).getByText('Not searchable')).toBeTruthy()
     expect(screen.getByText('Opening hours')).toBeTruthy()
+
+    expect(within(rows[0]).getByText('Supplied as context')).toBeTruthy()
+    expect(within(rows[0]).getByText('All time: 12 · Last 30 days: 3')).toBeTruthy()
+    expect(within(rows[1]).getByText('All time: 0 · Last 30 days: 0')).toBeTruthy()
+    expect(screen.getByText(/counts answers an article was given to, not answers that quoted it/i)).toBeTruthy()
   })
 
   it('says plainly that an empty knowledge base gives the assistant nothing to answer from', async () => {
