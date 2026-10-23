@@ -50,7 +50,8 @@ describe('GET /api/kb/coverage', () => {
     expect(res.status).toBe(200)
     expect(h.getKnowledgeCoverage).toHaveBeenCalledExactlyOnceWith(7)
     expect(h.getArticleUsage).toHaveBeenCalledExactlyOnceWith(7)
-    expect(await res.json()).toMatchObject({ summary: { total: 0 }, articleUsage: [] })
+    expect(await res.json()).toMatchObject({ summary: { total: 0 }, articleUsage: [], articleUsageAvailable: true })
+    expect(h.loggerError).not.toHaveBeenCalled()
   })
 
   it('returns coverage with zero usage when the usage read fails', async () => {
