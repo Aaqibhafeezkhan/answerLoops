@@ -1,16 +1,14 @@
 import { sql } from 'drizzle-orm'
+import { ARTICLE_USAGE_RETENTION_DAYS, ARTICLE_USAGE_WINDOW_DAYS } from '@/lib/kb/coverage'
 import { getDb } from '../drizzle'
 
 export interface ArticleUsage {
   article_id: number
-  /** Answers this article was supplied to, all time. */
+  /** Answers this article was supplied to within the retained usage window. */
   total: number
   /** The same, over the last `windowDays` days (today included). */
   recent: number
 }
-
-// How many days the "recent" figure covers.
-export const ARTICLE_USAGE_WINDOW_DAYS = 30
 
 /**
  * Counts one answer for each of the given articles, on today's UTC row.
@@ -58,10 +56,6 @@ export async function getArticleUsage(
     recent: Number(r.recent),
   }))
 }
-
-// Usage rows are kept this long; the dashboard only reads the all-time total and
-// a 30-day window, so older day rows are folded into nothing and can go.
-export const ARTICLE_USAGE_RETENTION_DAYS = 400
 
 /**
  * Deletes day rows older than the retention window and returns how many were

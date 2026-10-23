@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { ARTICLE_USAGE_RETENTION_DAYS, ARTICLE_USAGE_WINDOW_DAYS } from '@/lib/kb/coverage'
 
 // Runs the real query builders through drizzle's pg-proxy driver (no live
 // Postgres) and checks the SQL and parameters they emit. The statements
@@ -92,7 +93,7 @@ describe('getArticleUsage', () => {
 
   it('defaults the recent window to 30 days', async () => {
     responses.push([])
-    const { getArticleUsage, ARTICLE_USAGE_WINDOW_DAYS } = await import('@/lib/db/queries/kb-usage')
+    const { getArticleUsage } = await import('@/lib/db/queries/kb-usage')
 
     await getArticleUsage(7)
 
@@ -117,7 +118,7 @@ describe('getArticleUsage', () => {
 describe('pruneArticleUsage', () => {
   it('deletes day rows older than the retention window and returns the count', async () => {
     responses.push([{ '?column?': 1 }, { '?column?': 1 }])
-    const { pruneArticleUsage, ARTICLE_USAGE_RETENTION_DAYS } = await import('@/lib/db/queries/kb-usage')
+    const { pruneArticleUsage } = await import('@/lib/db/queries/kb-usage')
 
     expect(ARTICLE_USAGE_RETENTION_DAYS).toBe(400)
     expect(await pruneArticleUsage()).toBe(2)
