@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import type { Coverage, CoverageGroup, CoverageStatus } from '@/lib/kb/coverage'
+import { ARTICLE_USAGE_RETENTION_DAYS, ARTICLE_USAGE_WINDOW_DAYS, type Coverage, type CoverageGroup, type CoverageStatus } from '@/lib/kb/coverage'
+import type { ArticleUsage } from '@/lib/db/queries/kb-usage'
 import type { KBSearchResult } from '@/types'
 
 // How many matches the widget puts in front of the model per answer — kept in
@@ -11,8 +12,7 @@ import type { KBSearchResult } from '@/types'
 // shows what the assistant would actually draw on.
 const WIDGET_CONTEXT_ARTICLES = 5
 
-type ArticleUsageCounts = { article_id: number; total: number; recent: number }
-type CoverageResponse = Coverage & { articleUsage?: ArticleUsageCounts[] }
+type CoverageResponse = Coverage & { articleUsage?: ArticleUsage[] }
 
 const STATUS_BADGE: Record<Exclude<CoverageStatus, 'live'>, { label: string; hint: string; className: string }> = {
   unpublished: {
@@ -42,7 +42,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
   )
 }
 
-function GroupBlock({ group, articleUsageById }: { group: CoverageGroup; articleUsageById: Map<number, ArticleUsageCounts> }) {
+function GroupBlock({ group, articleUsageById }: { group: CoverageGroup; articleUsageById: Map<number, ArticleUsage> }) {
   const hidden = group.total - group.live
   return (
     <details className="group rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -83,7 +83,7 @@ function GroupBlock({ group, articleUsageById }: { group: CoverageGroup; article
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-slate-500">
               <span className="font-medium text-slate-700">Supplied as context</span>
               <span className="tabular-nums">
-                All time: {articleUsageById.get(item.id)?.total ?? 0} · Last 30 days: {articleUsageById.get(item.id)?.recent ?? 0}
+                Recorded (up to {ARTICLE_USAGE_RETENTION_DAYS} days): {articleUsageById.get(item.id)?.total ?? 0} · Last {ARTICLE_USAGE_WINDOW_DAYS} days: {articleUsageById.get(item.id)?.recent ?? 0}
               </span>
             </div>
           </li>
@@ -212,7 +212,7 @@ export function CoverageTab() {
   if (!coverage) return <p className="text-sm text-gray-500">Loading…</p>
 
   const { summary, groups } = coverage
-  const articleUsageById = new Map<number, ArticleUsageCounts>(
+  const articleUsageById = new Map<number, ArticleUsage>(
     (coverage.articleUsage ?? []).map((usage): [number, ArticleUsageCounts] => [usage.article_id, usage])
   )
 

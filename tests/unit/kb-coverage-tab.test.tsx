@@ -2,7 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { Coverage } from '@/lib/kb/coverage'
+import { ARTICLE_USAGE_RETENTION_DAYS, ARTICLE_USAGE_WINDOW_DAYS, type Coverage } from '@/lib/kb/coverage'
+import type { ArticleUsage } from '@/lib/db/queries/kb-usage'
 
 /**
  * The Knowledge coverage tab: what it tells an owner about their assistant, and
@@ -10,7 +11,7 @@ import type { Coverage } from '@/lib/kb/coverage'
  * per URL so each test controls both endpoints.
  */
 
-const coverage: Coverage & { articleUsage: Array<{ article_id: number; total: number; recent: number }> } = {
+const coverage: Coverage & { articleUsage: ArticleUsage[] } = {
   summary: { total: 4, live: 2, unpublished: 1, notSearchable: 1, sources: 2 },
   groups: [
     {
@@ -38,8 +39,8 @@ const coverage: Coverage & { articleUsage: Array<{ article_id: number; total: nu
   ],
   truncated: false,
   articleUsage: [
-    { article_id: 1, total: 12, recent: 3 },
     { article_id: 4, total: 2, recent: 1 },
+    { article_id: 1, total: 12, recent: 3 },
   ],
 }
 
@@ -97,8 +98,11 @@ describe('CoverageTab: what the assistant knows', () => {
     expect(screen.getByText('Opening hours')).toBeTruthy()
 
     expect(within(rows[0]).getByText('Supplied as context')).toBeTruthy()
-    expect(within(rows[0]).getByText('All time: 12 · Last 30 days: 3')).toBeTruthy()
-    expect(within(rows[1]).getByText('All time: 0 · Last 30 days: 0')).toBeTruthy()
+    expect(within(rows[0]).getByText(`Recorded (up to ${ARTICLE_USAGE_RETENTION_DAYS} days): 12 · Last ${ARTICLE_USAGE_WINDOW_DAYS} days: 3`)).toBeTruthy()
+    expect(within(rows[1]).getByText(`Recorded (up to ${ARTICLE_USAGE_RETENTION_DAYS} days): 0 · Last ${ARTICLE_USAGE_WINDOW_DAYS} days: 0`)).toBeTruthy()
+    expect(within(rows[2]).getByText(`Recorded (up to ${ARTICLE_USAGE_RETENTION_DAYS} days): 0 · Last ${ARTICLE_USAGE_WINDOW_DAYS} days: 0`)).toBeTruthy()
+    const manualRow = screen.getByText('Opening hours').closest('li')!
+    expect(within(manualRow).getByText(`Recorded (up to ${ARTICLE_USAGE_RETENTION_DAYS} days): 2 · Last ${ARTICLE_USAGE_WINDOW_DAYS} days: 1`)).toBeTruthy()
     expect(screen.getByText(/counts answers an article was given to, not answers that quoted it/i)).toBeTruthy()
   })
 
@@ -107,6 +111,13 @@ describe('CoverageTab: what the assistant knows', () => {
     await renderTab()
     expect(await screen.findByText(/no articles to answer from/i)).toBeTruthy()
     expect(screen.getByRole('link', { name: /add sources/i }).getAttribute('href')).toBe('/kb')
+  })
+
+  it('shows zero counts when the response has no usage field', async () => {
+    route({ coverage: { summary: { total: 1, live: 1, unpublished: 0, notSearchable: 0, sources: 0 }, groups: [{ key: 'manual', kind: 'manual', label: 'Added by hand', sourceType: null, total: 1, live: 1, items: [{ id: 99, title: 'No usage field', status: 'live' }] }], truncated: false } })
+    await renderTab()
+    const row = (await screen.findByText('No usage field')).closest('li')!
+    expect(within(row).getByText(`Recorded (up to ${ARTICLE_USAGE_RETENTION_DAYS} days): 0 · Last ${ARTICLE_USAGE_WINDOW_DAYS} days: 0`)).toBeTruthy()
   })
 
   it('notes when the list was cut off', async () => {

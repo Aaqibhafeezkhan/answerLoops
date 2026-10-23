@@ -18,7 +18,15 @@ export async function GET(request: Request) {
     if (!access.ok) return Response.json({ error: access.error }, { status: 401 })
     const [coverage, articleUsage] = await Promise.all([
       getKnowledgeCoverage(access.orgId),
-      getArticleUsage(access.orgId),
+      getArticleUsage(access.orgId).catch((err) => {
+        logger.error('failed to load knowledge article usage', {
+          module: MOD,
+          requestId: getRequestId(request),
+          orgId: access.orgId,
+          error: err,
+        })
+        return []
+      }),
     ])
     return Response.json({ ...coverage, articleUsage })
   } catch (err) {
