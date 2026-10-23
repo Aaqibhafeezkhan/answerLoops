@@ -12,7 +12,7 @@ import type { KBSearchResult } from '@/types'
 // shows what the assistant would actually draw on.
 const WIDGET_CONTEXT_ARTICLES = 5
 
-type CoverageResponse = Coverage & { articleUsage?: ArticleUsage[] }
+type CoverageResponse = Coverage & { articleUsage?: ArticleUsage[]; articleUsageAvailable?: boolean }
 
 const STATUS_BADGE: Record<Exclude<CoverageStatus, 'live'>, { label: string; hint: string; className: string }> = {
   unpublished: {
@@ -42,7 +42,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
   )
 }
 
-function GroupBlock({ group, articleUsageById }: { group: CoverageGroup; articleUsageById: Map<number, ArticleUsage> }) {
+function GroupBlock({ group, articleUsageById, articleUsageAvailable }: { group: CoverageGroup; articleUsageById: Map<number, ArticleUsage>; articleUsageAvailable: boolean }) {
   const hidden = group.total - group.live
   return (
     <details className="group rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -83,7 +83,9 @@ function GroupBlock({ group, articleUsageById }: { group: CoverageGroup; article
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-slate-500">
               <span className="font-medium text-slate-700">Supplied as context</span>
               <span className="tabular-nums">
-                Recorded (up to {ARTICLE_USAGE_RETENTION_DAYS} days): {articleUsageById.get(item.id)?.total ?? 0} · Last {ARTICLE_USAGE_WINDOW_DAYS} days: {articleUsageById.get(item.id)?.recent ?? 0}
+                {articleUsageAvailable
+                  ? `Recorded (up to ${ARTICLE_USAGE_RETENTION_DAYS} days): ${articleUsageById.get(item.id)?.total ?? 0} · Last ${ARTICLE_USAGE_WINDOW_DAYS} days: ${articleUsageById.get(item.id)?.recent ?? 0}`
+                  : 'Usage unavailable'}
               </span>
             </div>
           </li>
@@ -212,8 +214,9 @@ export function CoverageTab() {
   if (!coverage) return <p className="text-sm text-gray-500">Loading…</p>
 
   const { summary, groups } = coverage
+  const articleUsageAvailable = coverage.articleUsageAvailable !== false
   const articleUsageById = new Map<number, ArticleUsage>(
-    (coverage.articleUsage ?? []).map((usage): [number, ArticleUsageCounts] => [usage.article_id, usage])
+    (coverage.articleUsage ?? []).map((usage): [number, ArticleUsage] => [usage.article_id, usage])
   )
 
   return (
@@ -245,8 +248,13 @@ export function CoverageTab() {
           <p className="text-xs text-slate-500">
             <span className="font-medium text-slate-700">Supplied as context</span> counts answers an article was given to, not answers that quoted it.
           </p>
+          {!articleUsageAvailable && (
+            <p className="text-xs text-amber-700" role="status">
+              Article usage could not be loaded. Refresh to try again; coverage information is still available.
+            </p>
+          )}
           {groups.map((g) => (
-            <GroupBlock key={g.key} group={g} articleUsageById={articleUsageById} />
+            <GroupBlock key={g.key} group={g} articleUsageById={articleUsageById} articleUsageAvailable={articleUsageAvailable} />
           ))}
           {coverage.truncated && (
             <p className="text-xs text-slate-500">

@@ -83,6 +83,8 @@ describe('CoverageTab: what the assistant knows', () => {
   })
 
   it('lists every title under its source, flagging the ones the assistant cannot use', async () => {
+    expect(ARTICLE_USAGE_RETENTION_DAYS).toBe(400)
+    expect(ARTICLE_USAGE_WINDOW_DAYS).toBe(30)
     route({})
     await renderTab()
     const group = (await screen.findByText('help-center.pdf')).closest('details')!
@@ -111,6 +113,15 @@ describe('CoverageTab: what the assistant knows', () => {
     await renderTab()
     expect(await screen.findByText(/no articles to answer from/i)).toBeTruthy()
     expect(screen.getByRole('link', { name: /add sources/i }).getAttribute('href')).toBe('/kb')
+  })
+
+  it('shows usage unavailable rather than zero when the usage query failed', async () => {
+    route({ coverage: { ...coverage, articleUsage: [], articleUsageAvailable: false } })
+    await renderTab()
+    expect(await screen.findByText(/article usage could not be loaded/i)).toBeTruthy()
+    const row = screen.getByText('How do I reset my password?').closest('li')!
+    expect(within(row).getByText('Usage unavailable')).toBeTruthy()
+    expect(within(row).queryByText('Recorded (up to 400 days): 0 · Last 30 days: 0')).toBeNull()
   })
 
   it('shows zero counts when the response has no usage field', async () => {

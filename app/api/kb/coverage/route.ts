@@ -16,19 +16,21 @@ export async function GET(request: Request) {
   try {
     const access = await requireOrgAccess()
     if (!access.ok) return Response.json({ error: access.error }, { status: 401 })
-    const [coverage, articleUsage] = await Promise.all([
+    const [coverage, usageResult] = await Promise.all([
       getKnowledgeCoverage(access.orgId),
-      getArticleUsage(access.orgId).catch((err) => {
-        logger.error('failed to load knowledge article usage', {
-          module: MOD,
-          requestId: getRequestId(request),
-          orgId: access.orgId,
-          error: err,
-        })
-        return []
-      }),
+      getArticleUsage(access.orgId)
+        .then((articleUsage) => ({ articleUsage, articleUsageAvailable: true as const }))
+        .catch((err) => {
+          logger.error('failed to load knowledge article usage', {
+            module: MOD,
+            requestId: getRequestId(request),
+            orgId: access.orgId,
+            error: err,
+          })
+          return { articleUsage: [], articleUsageAvailable: false as const }
+        }),
     ])
-    return Response.json({ ...coverage, articleUsage })
+    return Response.json({ ...coverage, ...usageResult })
   } catch (err) {
     logger.error('failed to load knowledge coverage', { module: MOD, requestId: getRequestId(request), error: err })
     return Response.json({ error: 'Internal server error' }, { status: 500 })
