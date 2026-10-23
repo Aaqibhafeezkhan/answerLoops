@@ -11,6 +11,9 @@ import type { KBSearchResult } from '@/types'
 // shows what the assistant would actually draw on.
 const WIDGET_CONTEXT_ARTICLES = 5
 
+type ArticleUsageCounts = { article_id: number; total: number; recent: number }
+type CoverageResponse = Coverage & { articleUsage?: ArticleUsageCounts[] }
+
 const STATUS_BADGE: Record<Exclude<CoverageStatus, 'live'>, { label: string; hint: string; className: string }> = {
   unpublished: {
     label: 'Unpublished',
@@ -39,7 +42,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
   )
 }
 
-function GroupBlock({ group }: { group: CoverageGroup }) {
+function GroupBlock({ group, articleUsageById }: { group: CoverageGroup; articleUsageById: Map<number, ArticleUsageCounts> }) {
   const hidden = group.total - group.live
   return (
     <details className="group rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -65,16 +68,24 @@ function GroupBlock({ group }: { group: CoverageGroup }) {
       </summary>
       <ul className="divide-y divide-slate-100 border-t border-slate-100">
         {group.items.map((item) => (
-          <li key={item.id} className="flex flex-wrap items-start gap-2 px-4 py-2 pl-10">
-            <span className="min-w-0 flex-1 break-words text-sm text-slate-700">{item.title}</span>
-            {item.status !== 'live' && (
-              <span
-                title={STATUS_BADGE[item.status].hint}
-                className={`shrink-0 rounded px-1.5 py-0.5 text-[0.625rem] font-medium ${STATUS_BADGE[item.status].className}`}
-              >
-                {STATUS_BADGE[item.status].label}
+          <li key={item.id} className="flex flex-col gap-1 px-4 py-2 pl-10 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="min-w-0 break-words text-sm text-slate-700">{item.title}</span>
+              {item.status !== 'live' && (
+                <span
+                  title={STATUS_BADGE[item.status].hint}
+                  className={`shrink-0 rounded px-1.5 py-0.5 text-[0.625rem] font-medium ${STATUS_BADGE[item.status].className}`}
+                >
+                  {STATUS_BADGE[item.status].label}
+                </span>
+              )}
+            </div>
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-slate-500">
+              <span className="font-medium text-slate-700">Supplied as context</span>
+              <span className="tabular-nums">
+                All time: {articleUsageById.get(item.id)?.total ?? 0} · Last 30 days: {articleUsageById.get(item.id)?.recent ?? 0}
               </span>
-            )}
+            </div>
           </li>
         ))}
       </ul>
@@ -178,7 +189,7 @@ function QuestionTester() {
 }
 
 export function CoverageTab() {
-  const [coverage, setCoverage] = useState<Coverage | null>(null)
+  const [coverage, setCoverage] = useState<CoverageResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -187,7 +198,7 @@ export function CoverageTab() {
       .then(async (res) => {
         const data = await res.json()
         if (!res.ok) throw new Error(data?.error ?? 'Failed to load')
-        if (!cancelled) setCoverage(data as Coverage)
+        if (!cancelled) setCoverage(data as CoverageResponse)
       })
       .catch(() => {
         if (!cancelled) setError('Could not load what your assistant knows. Try refreshing.')
@@ -201,6 +212,9 @@ export function CoverageTab() {
   if (!coverage) return <p className="text-sm text-gray-500">Loading…</p>
 
   const { summary, groups } = coverage
+  const articleUsageById = new Map<number, ArticleUsageCounts>(
+    (coverage.articleUsage ?? []).map((usage): [number, ArticleUsageCounts] => [usage.article_id, usage])
+  )
 
   return (
     <div className="space-y-6">
@@ -228,8 +242,11 @@ export function CoverageTab() {
         </p>
       ) : (
         <div className="space-y-3">
+          <p className="text-xs text-slate-500">
+            <span className="font-medium text-slate-700">Supplied as context</span> counts answers an article was given to, not answers that quoted it.
+          </p>
           {groups.map((g) => (
-            <GroupBlock key={g.key} group={g} />
+            <GroupBlock key={g.key} group={g} articleUsageById={articleUsageById} />
           ))}
           {coverage.truncated && (
             <p className="text-xs text-slate-500">
