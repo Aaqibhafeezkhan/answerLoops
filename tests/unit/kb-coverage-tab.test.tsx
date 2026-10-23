@@ -115,6 +115,14 @@ describe('CoverageTab: what the assistant knows', () => {
     expect(screen.getByRole('link', { name: /add sources/i }).getAttribute('href')).toBe('/kb')
   })
 
+  it('shows usage counts without an unavailable banner when usage loaded successfully', async () => {
+    route({ coverage: { ...coverage, articleUsageAvailable: true } })
+    await renderTab()
+    expect(screen.queryByText(/article usage could not be loaded/i)).toBeNull()
+    const row = (await screen.findByText('How do I reset my password?')).closest('li')!
+    expect(within(row).getByText('Recorded (up to 400 days): 12 · Last 30 days: 3')).toBeTruthy()
+  })
+
   it('shows usage unavailable rather than zero when the usage query failed', async () => {
     route({ coverage: { ...coverage, articleUsage: [], articleUsageAvailable: false } })
     await renderTab()
