@@ -1,3 +1,4 @@
+import { MarkTicketSeen } from '@/components/notifications/mark-ticket-seen'
 import { GithubReferenceLink } from '@/components/tickets/github-reference'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -96,6 +97,7 @@ export default async function TicketDetailPage(props: { params: Promise<{ id: st
 
   return (
     <div className="dashboard-page max-w-6xl space-y-6">
+      <MarkTicketSeen ticketNumber={ticket.org_ticket_number} />
       {/* Back navigation */}
       <Link href="/tickets" className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 transition-colors hover:text-blue-800">
         ← Back to tickets
