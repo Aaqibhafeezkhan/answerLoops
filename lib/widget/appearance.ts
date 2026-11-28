@@ -277,6 +277,19 @@ export type BrandPalette = Record<string, string>
  * readable text color for text on `--brand-600`. Every value is generated
  * `#rrggbb`; nothing typed by a person is passed through.
  */
+/** The least contrast a focus ring needs against the white panel to stay clearly visible (WCAG non-text contrast). */
+export const FOCUS_RING_MIN_CONTRAST = 3
+
+/**
+ * The color of keyboard focus rings in the chat panel. The brand color itself
+ * when it stands out against white; otherwise near-black, which with the
+ * ring's white offset gives the two-tone ring the launcher bubble uses. So a
+ * very pale brand color never leaves a focus ring nobody can see.
+ */
+export function focusRingColor(brand: string): string {
+  return contrastRatio(brand, ON_BRAND_LIGHT) >= FOCUS_RING_MIN_CONTRAST ? brand : ON_BRAND_DARK
+}
+
 export function brandPalette(color: string): BrandPalette {
   const base = isValidBrandColor(color) ? color.toLowerCase() : DEFAULT_WIDGET_BRAND_COLOR
   const [r, g, b] = hexToRgb(base)
@@ -292,6 +305,7 @@ export function brandPalette(color: string): BrandPalette {
     palette[`--brand-${step}`] = at(l * keep)
   }
   palette['--brand-on'] = readableTextColor(base)
+  palette['--brand-focus'] = focusRingColor(base)
   return palette
 }
 

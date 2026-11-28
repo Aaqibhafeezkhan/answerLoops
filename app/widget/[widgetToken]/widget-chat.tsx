@@ -240,7 +240,7 @@ function ReplyFailedBubble({
           onClick={onRetry}
           disabled={retrying}
           aria-busy={retrying}
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-600 px-4 text-xs font-medium text-on-brand transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-600 px-4 text-xs font-medium text-on-brand transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 disabled:opacity-60"
         >
           {retrying ? 'Retrying…' : 'Retry'}
         </button>
@@ -515,6 +515,20 @@ function WidgetChatBody({
   const ready = stored.loaded
   const input = typed ?? stored.draft
 
+  // Esc inside the chat closes the panel. Key presses here never reach the
+  // host page, so the chat asks the embed script (public/widget.js) to close
+  // it; the script then puts focus back on the bubble. The message carries
+  // nothing but its type.
+  useEffect(() => {
+    if (window.parent === window) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      window.parent.postMessage({ type: 'answerloops:close-panel' }, '*')
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   function changeInput(value: string) {
     setTyped(value)
     saveDraft(widgetToken, value)
@@ -558,6 +572,10 @@ function WidgetChatBody({
   // Set the moment Retry is pressed, before React re-renders, so a second
   // press in the same instant cannot send the question twice.
   const retryInFlightRef = useRef(false)
+  // The newest finished reply, read out once by screen readers (never each
+  // streamed piece, never a reply restored from an earlier visit).
+  const [announcement, setAnnouncement] = useState('')
+  const announcedIdRef = useRef<string | null>(null)
   // The chat call is refused (HTTP 403) once the page's short-lived pass has
   // expired, which is what happens when a visitor leaves the chat open and
   // comes back. Reloading the panel gets a fresh one.
@@ -634,6 +652,9 @@ function WidgetChatBody({
     const { unsubscribe } = agent.subscribe({
       onEvent: ({ messages: current }) => setMessages([...current]),
       onRunInitialized: () => {
+        // Cleared at the start of each run, so the next reply is read out even
+        // when its words match the last one.
+        setAnnouncement('')
         runFailedRef.current = false
         setIsLoading(true)
       },
@@ -645,6 +666,18 @@ function WidgetChatBody({
         if (!runFailedRef.current) {
           setFailure(null)
           setRetrying(false)
+        }
+        // Announce the reply this run produced, once, and only when the run
+        // finished without failing (the failure bubble is announced on its
+        // own). An earlier reply is never read out again.
+        const reply = runFailedRef.current
+          ? undefined
+          : [...(agent.messages as Message[])]
+              .reverse()
+              .find((m) => m.role === 'assistant' && typeof m.content === 'string' && m.content.trim() !== '')
+        if (reply && reply.id !== announcedIdRef.current) {
+          announcedIdRef.current = reply.id
+          setAnnouncement(`Reply: ${reply.content as string}`)
         }
         // A failed run never reaches the chat route's onFinish, so the stash
         // this reads has nothing for it — the fetch above just resolves to
@@ -916,6 +949,10 @@ function WidgetChatBody({
 
   return (
     <WidgetActionsProvider value={actions}>
+    {/* Each finished reply, read out once by screen readers. */}
+    <output className="sr-only" aria-live="polite" data-testid="reply-announcer">
+      {announcement}
+    </output>
     <div
       className="flex flex-col h-screen bg-white font-sans text-sm"
       // Only generated #rrggbb tokens from brandPalette() reach this style.
@@ -936,7 +973,7 @@ function WidgetChatBody({
             type="button"
             onClick={handleNewChat}
             aria-label="New chat"
-            className="-my-2 -mr-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 transition-colors"
+            className="-my-2 -mr-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 transition-colors"
           >
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
@@ -963,21 +1000,22 @@ function WidgetChatBody({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              aria-label="Your email"
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100 transition-colors"
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:border-brand-focus focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-focus/30 transition-colors"
             />
             {emailError && <p className="break-words text-[0.625rem] text-red-500">{emailError}</p>}
             <button
               type="submit"
               disabled={emailPending}
-              className="w-full rounded-lg bg-brand-600 py-2.5 text-xs font-medium text-on-brand hover:bg-brand-700 disabled:opacity-50 transition-colors"
+              className="w-full rounded-lg bg-brand-600 py-2.5 text-xs font-medium text-on-brand hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 disabled:opacity-50 transition-colors"
             >
               {emailPending ? 'Starting…' : 'Start chat'}
             </button>
             <button
               type="button"
               onClick={() => setEmailSubmitted(true)}
-              className="w-full text-[0.625rem] text-gray-400 hover:text-gray-600 transition-colors"
+              className="w-full rounded-sm text-[0.625rem] text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2"
             >
               Skip
             </button>
@@ -1008,7 +1046,7 @@ function WidgetChatBody({
                         type="button"
                         onClick={() => sendMessage(question)}
                         disabled={isLoading}
-                        className="min-h-11 max-w-full break-words rounded-2xl border border-brand-300 bg-white px-3.5 py-2.5 text-center text-xs font-medium leading-snug text-gray-800 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50"
+                        className="min-h-11 max-w-full break-words rounded-2xl border border-brand-300 bg-white px-3.5 py-2.5 text-center text-xs font-medium leading-snug text-gray-800 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 disabled:opacity-50"
                       >
                         {question}
                       </button>
@@ -1039,11 +1077,13 @@ function WidgetChatBody({
 
             {sessionExpired && (
               <div className="space-y-3 px-2 text-center" data-testid="session-expired">
-                <p className="break-words text-xs leading-relaxed text-gray-600">This chat session timed out. Start a new one to keep going.</p>
+                <output className="block break-words text-xs leading-relaxed text-gray-600" aria-live="polite">
+                  This chat session timed out. Start a new one to keep going.
+                </output>
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="mx-auto block min-h-11 w-full max-w-[16rem] rounded-lg bg-brand-600 px-4 py-2.5 text-xs font-medium text-on-brand hover:bg-brand-700 transition-colors"
+                  className="mx-auto block min-h-11 w-full max-w-[16rem] rounded-lg bg-brand-600 px-4 py-2.5 text-xs font-medium text-on-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 hover:bg-brand-700 transition-colors"
                 >
                   Start a new session
                 </button>
@@ -1061,21 +1101,22 @@ function WidgetChatBody({
                     type="email"
                     value={failureEmail}
                     onChange={(e) => setFailureEmail(e.target.value)}
+                    aria-label="Your email"
                     placeholder="you@example.com"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:border-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-100 transition-colors"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:border-brand-focus focus:outline-none focus:ring-2 focus:ring-brand-focus/30 transition-colors"
                   />
                   <div className="flex items-center gap-1.5">
                     <button
                       type="submit"
                       disabled={failureEmailPending || !failureEmail.trim()}
-                      className="min-w-[4.5rem] shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-center text-[0.6875rem] font-medium text-on-brand hover:bg-brand-700 disabled:opacity-50 transition-colors"
+                      className="min-w-[4.5rem] shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-center text-[0.6875rem] font-medium text-on-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 hover:bg-brand-700 disabled:opacity-50 transition-colors"
                     >
                       {failureEmailPending ? 'Sending…' : 'Send'}
                     </button>
                     <button
                       type="button"
                       onClick={dismissFailurePrompt}
-                      className="shrink-0 text-[0.6875rem] text-gray-400 hover:text-gray-600 transition-colors"
+                      className="shrink-0 rounded-sm text-[0.6875rem] text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2"
                     >
                       No thanks
                     </button>
@@ -1090,7 +1131,7 @@ function WidgetChatBody({
               type="button"
               onClick={jumpToLatest}
               data-testid="jump-to-latest"
-              className="absolute bottom-3 left-1/2 flex min-h-9 -translate-x-1/2 items-center gap-1 rounded-full bg-brand-600 px-3.5 text-xs font-medium text-on-brand shadow-md hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+              className="absolute bottom-3 left-1/2 flex min-h-9 -translate-x-1/2 items-center gap-1 rounded-full bg-brand-600 px-3.5 text-xs font-medium text-on-brand shadow-md hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2"
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 5v14M5 12l7 7 7-7" />

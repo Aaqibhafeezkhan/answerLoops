@@ -131,7 +131,7 @@ describe('widget page appearance', () => {
     h.getOrgByWidgetToken.mockResolvedValue(org({ title: null, welcome: null, brandColor: '#0b1f4d' }))
     const style = (await renderPage()).brandStyle as Record<string, string>
     for (const [name, value] of Object.entries(style)) {
-      expect(name).toMatch(/^--brand-(50|100|200|300|400|500|600|700|800|900|950|on)$/)
+      expect(name).toMatch(/^--brand-(50|100|200|300|400|500|600|700|800|900|950|on|focus)$/)
       expect(value).toMatch(/^#[0-9a-f]{6}$/)
     }
   })

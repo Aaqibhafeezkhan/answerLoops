@@ -24,6 +24,7 @@ interface El {
   children: El[]
   setAttribute(k: string, v: string): void
   getAttribute(k: string): string | null
+  removeAttribute(k: string): void
   addEventListener(type: string, fn: () => void): void
   listeners: Record<string, () => void>
   appendChild(c: El): void
@@ -45,6 +46,9 @@ function el(tag: string): El {
     },
     getAttribute(k) {
       return k in e.attrs ? e.attrs[k] : null
+    },
+    removeAttribute(k) {
+      delete e.attrs[k]
     },
     listeners: {},
     addEventListener(type, fn) {

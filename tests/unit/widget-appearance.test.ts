@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_WIDGET_BRAND_COLOR,
+  FOCUS_RING_MIN_CONTRAST,
   ON_BRAND_DARK,
   ON_BRAND_LIGHT,
   STARTER_QUESTIONS_LIMIT_MESSAGE,
@@ -155,7 +156,7 @@ describe('brand palette', () => {
     for (const color of ['#2563eb', '#ffd60a', '#0b1f4d', '#000000', '#ffffff']) {
       const palette = brandPalette(color)
       expect(Object.keys(palette).sort()).toEqual(
-        [...STEPS.map((s) => `--brand-${s}`), '--brand-on'].sort()
+        [...STEPS.map((s) => `--brand-${s}`), '--brand-on', '--brand-focus'].sort()
       )
       for (const [name, value] of Object.entries(palette)) {
         expect(value, `${color} ${name}`).toMatch(HEX)
@@ -187,6 +188,21 @@ describe('brand palette', () => {
   it('sets the on-color to the readable text for the chosen color', () => {
     expect(brandPalette('#ffd60a')['--brand-on']).toBe(ON_BRAND_DARK)
     expect(brandPalette('#0b1f4d')['--brand-on']).toBe(ON_BRAND_LIGHT)
+  })
+
+  it('uses the brand color for focus rings when it stands out against white, and near-black when it does not', () => {
+    for (const color of ['#2563eb', '#0b1f4d', '#aa00ff']) {
+      expect(contrastRatio(color, '#ffffff')).toBeGreaterThanOrEqual(FOCUS_RING_MIN_CONTRAST)
+      expect(brandPalette(color)['--brand-focus']).toBe(color)
+    }
+    for (const color of ['#ffd60a', '#ffffff', '#a5f3fc']) {
+      expect(contrastRatio(color, '#ffffff')).toBeLessThan(FOCUS_RING_MIN_CONTRAST)
+      expect(brandPalette(color)['--brand-focus']).toBe(ON_BRAND_DARK)
+    }
+    // Whatever the brand color, the ring is clearly visible on the white panel.
+    for (const color of ['#2563eb', '#ffd60a', '#0b1f4d', '#000000', '#ffffff', '#808080', '#a5f3fc']) {
+      expect(contrastRatio(brandPalette(color)['--brand-focus'], '#ffffff')).toBeGreaterThanOrEqual(FOCUS_RING_MIN_CONTRAST)
+    }
   })
 
   it('never passes raw input through: an invalid color gives the default scale', () => {

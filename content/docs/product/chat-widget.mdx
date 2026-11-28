@@ -387,6 +387,16 @@ Before a reply starts, three dots fade in turn in a reply-shaped bubble, and the
 - **Reduced motion.** When the visitor's device asks for reduced motion, the dots and placeholders do not animate and the conversation jumps rather than glides when it scrolls.
 - **Screen readers.** Screen readers hear "Typing" once while the assistant works, not every piece of the reply as it streams.
 
+## Keyboard and screen readers
+
+The chat works without a mouse, and with a screen reader:
+
+- **Opening and closing.** The chat button is announced as "Open support chat" or "Close support chat" and says whether the chat is open. **Esc** closes the chat from anywhere inside it or on your page, and puts focus back on the chat button.
+- **Tab order.** While the chat is open, Tab moves through New chat, the conversation's links and buttons in reading order, the question box and the send button. While it is closed, nothing in it can be reached with Tab, so your page's own Tab order is unchanged.
+- **Focus.** Every button, link and field in the chat shows a clear focus ring when reached with the keyboard. It uses your brand color when that color stands out against the white chat, and a dark ring otherwise, so it stays visible whatever color you choose.
+- **Announcements.** Each reply is read out once, after it has finished, never word by word as it arrives. A failed reply and a "session timed out" message are announced too.
+- **Reduced motion.** When the visitor's device asks for reduced motion, the chat opens and closes without scaling or fading, the chat button does not grow on hover, and nothing else in the chat animates.
+
 ## Keeping the conversation
 
 The chat keeps the conversation in the visitor's own browser, so refreshing the page or moving to another page of your site does not lose it. It is forgotten a day after the last message, and nothing extra is sent to anyone to bring it back. The most recent messages are kept, up to a few dozen. A **New chat** button in the chat header clears it and starts again. If the browser blocks storage (some private windows do), the chat still works and simply starts fresh each time.

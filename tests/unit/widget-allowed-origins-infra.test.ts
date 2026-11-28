@@ -418,6 +418,7 @@ interface FakeElement {
   children: FakeElement[]
   setAttribute(k: string, v: string): void
   getAttribute(k: string): string | null
+  removeAttribute(k: string): void
   addEventListener(): void
   appendChild(c: FakeElement): void
   classList: { add(): void; remove(): void }
@@ -438,6 +439,9 @@ function makeElement(tag: string): FakeElement {
     },
     getAttribute(k) {
       return k in el.attrs ? el.attrs[k] : null
+    },
+    removeAttribute(k) {
+      delete el.attrs[k]
     },
     addEventListener() {},
     appendChild(c) {

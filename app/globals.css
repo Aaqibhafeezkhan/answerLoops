@@ -47,6 +47,9 @@
   --color-brand-800: var(--brand-800, #1e40af);
   --color-brand-900: var(--brand-900, #1e3a8a);
   --color-brand-950: var(--brand-950, #172554);
+  /* Keyboard focus rings in the chat panel: the brand color when it stands out
+     against white, else near-black (lib/widget/appearance.ts focusRingColor). */
+  --color-brand-focus: var(--brand-focus, #2563eb);
 
   /* Charcoal neutrals (aligned to gray scale for dashboards) */
   --color-ink-50:  var(--ink-50, #f9fafb);

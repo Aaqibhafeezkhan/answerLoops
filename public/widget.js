@@ -45,6 +45,11 @@
   var baseUrl = encodedAddress(webAddress(script.getAttribute('data-base-url') ||
     (script.src ? script.src.replace('/widget.js', '') : window.location.origin)));
   if (!baseUrl) return;
+  // The chat's origin, for checking where a message from the chat frame came from.
+  var chatOrigin = null;
+  try {
+    chatOrigin = new URL(baseUrl).origin;
+  } catch (e) {}
 
   var BUBBLE_SIZE = 56;
   // Window sizes a business can pick (small is today's size and the default).
@@ -130,8 +135,13 @@
       // on any brand color and on any page background.
       '#cp-widget-bubble:focus-visible{outline:none;box-shadow:0 0 0 3px #ffffff,0 0 0 6px #111827;}',
       '#cp-widget-bubble .cp-logo{width:44px;height:44px;border-radius:50%;background:#ffffff;object-fit:cover;display:block;}',
-      '#cp-widget-panel{position:fixed;bottom:' + (BUBBLE_SIZE + 32) + 'px;right:24px;z-index:2147483645;width:' + PANEL_W + 'px;height:' + PANEL_H + 'px;background:#ffffff;max-width:calc(100vw - 48px);max-height:calc(100vh - ' + (BUBBLE_SIZE + 56) + 'px);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.18);border:1px solid #e5e7eb;overflow:hidden;transform-origin:bottom right;transition:transform .2s cubic-bezier(.34,1.56,.64,1),opacity .15s;transform:scale(.85);opacity:0;pointer-events:none;}',
-      '#cp-widget-panel.cp-open{transform:scale(1);opacity:1;pointer-events:all;}',
+      '#cp-widget-panel{position:fixed;bottom:' + (BUBBLE_SIZE + 32) + 'px;right:24px;z-index:2147483645;width:' + PANEL_W + 'px;height:' + PANEL_H + 'px;background:#ffffff;max-width:calc(100vw - 48px);max-height:calc(100vh - ' + (BUBBLE_SIZE + 56) + 'px);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.18);border:1px solid #e5e7eb;overflow:hidden;transform-origin:bottom right;transition:transform .2s cubic-bezier(.34,1.56,.64,1),opacity .15s,visibility 0s linear .2s;transform:scale(.85);opacity:0;pointer-events:none;visibility:hidden;}',
+      // Open: visible straight away (no delay), then scales and fades in. Closed:
+      // fades out, then becomes hidden, so neither Tab nor a screen reader can
+      // reach the chat while it is closed.
+      '#cp-widget-panel.cp-open{transform:scale(1);opacity:1;pointer-events:all;visibility:visible;transition-delay:0s;}',
+      // Reduced motion: no scaling, no fade, no growing bubble.
+      '@media (prefers-reduced-motion:reduce){#cp-widget-panel,#cp-widget-panel.cp-open{transition:none;transform:none;}#cp-widget-bubble,#cp-widget-bubble:hover{transition:none;transform:none;}}',
       '#cp-widget-panel iframe{width:100%;height:100%;border:none;display:block;}',
     ].join('');
     document.head.appendChild(style);
@@ -160,6 +170,8 @@
     bubble = document.createElement('button');
     bubble.id = 'cp-widget-bubble';
     bubble.setAttribute('aria-label', 'Open support chat');
+    bubble.setAttribute('aria-expanded', 'false');
+    bubble.setAttribute('aria-controls', 'cp-widget-panel');
     showClosedBubble();
     bubble.addEventListener('click', togglePanel);
     document.body.appendChild(bubble);
@@ -170,7 +182,43 @@
     panel.id = 'cp-widget-panel';
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-label', 'Support chat');
+    setPanelHidden(true);
     document.body.appendChild(panel);
+  }
+
+  // A closed panel is taken out of the page for keyboard and assistive tech.
+  function setPanelHidden(hidden) {
+    if (hidden) {
+      panel.setAttribute('inert', '');
+      panel.setAttribute('aria-hidden', 'true');
+    } else {
+      panel.removeAttribute('inert');
+      panel.removeAttribute('aria-hidden');
+    }
+  }
+
+  // Closes the open panel and puts keyboard focus back on the bubble, for Esc
+  // pressed on this page or inside the chat.
+  function closePanel() {
+    if (!isOpen) return;
+    togglePanel();
+    try {
+      bubble.focus();
+    } catch (e) {}
+  }
+
+  function onKeydown(e) {
+    if (isOpen && (e.key === 'Escape' || e.key === 'Esc')) closePanel();
+  }
+
+  // The chat asks to close when Esc is pressed inside it (key presses there do
+  // not reach this page). Only its own frame, from the chat's own origin, is
+  // listened to, and the message carries nothing but its type.
+  function onMessage(e) {
+    if (!iframe || e.source !== iframe.contentWindow) return;
+    if (chatOrigin && e.origin !== chatOrigin) return;
+    var data = e.data;
+    if (data && typeof data === 'object' && data.type === 'answerloops:close-panel') closePanel();
   }
 
   // Creates the chat frame on first use and (re)loads it. The embedding origin
@@ -217,14 +265,18 @@
     isOpen = !isOpen;
     if (isOpen) {
       if (!iframe || Date.now() - frameLoadedAt > FRAME_MAX_AGE_MS) loadFrame();
+      setPanelHidden(false);
       panel.classList.add('cp-open');
       bubble.setAttribute('aria-label', 'Close support chat');
+      bubble.setAttribute('aria-expanded', 'true');
       setBubbleIcon(20, CLOSE_ICON_PATH);
       // A frame that is still loading announces itself from its load event.
       announceOpen();
     } else {
       panel.classList.remove('cp-open');
+      setPanelHidden(true);
       bubble.setAttribute('aria-label', 'Open support chat');
+      bubble.setAttribute('aria-expanded', 'false');
       showClosedBubble();
     }
   }
@@ -289,6 +341,8 @@
       createStyles();
       createBubble();
       createPanel();
+      if (typeof document.addEventListener === 'function') document.addEventListener('keydown', onKeydown);
+      if (typeof window.addEventListener === 'function') window.addEventListener('message', onMessage);
     });
   }
 

@@ -210,6 +210,9 @@ describe('public/widget.js: using the resolved token', () => {
         e.attrs[k] = v
       },
       getAttribute: (k: string) => (k in e.attrs ? e.attrs[k] : null),
+      removeAttribute: (k: string) => {
+        delete e.attrs[k]
+      },
       listeners: {},
       addEventListener: (type: string, fn: () => void) => {
         e.listeners[type] = fn

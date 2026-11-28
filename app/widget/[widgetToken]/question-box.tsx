@@ -108,13 +108,13 @@ export function QuestionBox({
         placeholder="Ask a question…"
         aria-label="Your question"
         enterKeyHint="send"
-        className="block min-h-11 flex-1 resize-none rounded-[22px] border border-gray-200 bg-gray-50 px-4 py-2.5 text-base leading-6 text-gray-900 placeholder-gray-400 transition-colors focus:border-brand-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100 pointer-fine:min-h-8 pointer-fine:py-1.5 pointer-fine:text-xs pointer-fine:leading-5"
+        className="block min-h-11 flex-1 resize-none rounded-[22px] border border-gray-200 bg-gray-50 px-4 py-2.5 text-base leading-6 text-gray-900 placeholder-gray-400 transition-colors focus:border-brand-focus focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-focus/30 pointer-fine:min-h-8 pointer-fine:py-1.5 pointer-fine:text-xs pointer-fine:leading-5"
       />
       <button
         type="submit"
         aria-label="Send message"
         disabled={!canSend}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-600 text-on-brand transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 disabled:opacity-40 pointer-fine:h-8 pointer-fine:w-8"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-600 text-on-brand transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 disabled:opacity-40 pointer-fine:h-8 pointer-fine:w-8"
       >
         <svg className="h-3.5 w-3.5 rotate-90" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />

@@ -93,7 +93,7 @@ export function ChoicesCard({ data }: { data: ChoicesData }) {
                 setPicked(option.label)
                 send(option.label)
               }}
-              className={`max-w-full break-words rounded-2xl border px-3 py-1.5 text-left text-xs font-medium transition-colors ${
+              className={`max-w-full break-words rounded-2xl border px-3 py-1.5 text-left text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 ${
                 selected
                   ? 'border-brand-600 bg-brand-600 text-on-brand'
                   : 'border-brand-200 bg-brand-50 text-brand-700 hover:border-brand-300 hover:bg-brand-100 disabled:opacity-50 disabled:hover:bg-brand-50'
@@ -129,7 +129,7 @@ export function FollowUpsCard({ data, toolCallId }: { data: FollowUpsData; toolC
             type="button"
             disabled={!canReply}
             onClick={() => send(question.label)}
-            className="min-h-11 max-w-full break-words rounded-2xl border border-brand-300 bg-white px-3.5 py-2 text-left text-xs font-medium leading-snug text-gray-800 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50 disabled:hover:bg-white"
+            className="min-h-11 max-w-full break-words rounded-2xl border border-brand-300 bg-white px-3.5 py-2 text-left text-xs font-medium leading-snug text-gray-800 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 disabled:opacity-50 disabled:hover:bg-white"
           >
             {question.label}
           </button>
@@ -196,7 +196,7 @@ export function LinkCard({ data }: { data: LinkCardData }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`${cardBase} group block p-3 transition-colors hover:border-brand-200 hover:bg-brand-50/40`}
+      className={`${cardBase} group block p-3 transition-colors hover:border-brand-200 hover:bg-brand-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2`}
     >
       <p className="truncate text-[0.625rem] text-gray-400">{host}</p>
       <p className="mt-0.5 break-words text-xs font-semibold text-gray-900">{data.title}</p>
@@ -232,7 +232,7 @@ export function ContactCard({ data }: { data: ContactData }) {
             <a
               href={o.href}
               {...(o.kind === 'url' ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-              className="flex items-center gap-2.5 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 transition-colors hover:border-brand-200 hover:bg-brand-50"
+              className="flex items-center gap-2.5 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 hover:border-brand-200 hover:bg-brand-50"
             >
               <svg
                 className="h-3.5 w-3.5 shrink-0 text-brand-600"

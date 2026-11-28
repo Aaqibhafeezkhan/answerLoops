@@ -188,7 +188,7 @@ export function AnswerFeedback({ config, answerToken }: { config: AnswerFeedback
               type="button"
               aria-pressed={reason === r.value}
               onClick={() => setReason(reason === r.value ? null : r.value)}
-              className={`min-h-9 rounded-full border px-3 py-1.5 text-[0.6875rem] font-medium leading-snug transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
+              className={`min-h-9 rounded-full border px-3 py-1.5 text-[0.6875rem] font-medium leading-snug transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 ${
                 reason === r.value
                   ? 'border-brand-600 bg-brand-600 text-on-brand'
                   : 'border-brand-300 bg-white text-gray-800 hover:bg-brand-50'
@@ -208,7 +208,7 @@ export function AnswerFeedback({ config, answerToken }: { config: AnswerFeedback
             maxLength={MAX_NOTE_CHARS}
             rows={2}
             onChange={(e) => setNote(e.target.value)}
-            className="mt-1 w-full resize-none rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            className="mt-1 w-full resize-none rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2"
           />
         </div>
         {config.offerEmail && (
@@ -223,7 +223,7 @@ export function AnswerFeedback({ config, answerToken }: { config: AnswerFeedback
               autoComplete="email"
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2"
             />
           </div>
         )}
@@ -236,7 +236,7 @@ export function AnswerFeedback({ config, answerToken }: { config: AnswerFeedback
           <button
             type="submit"
             disabled={busy}
-            className="min-h-9 rounded-lg bg-brand-600 px-3.5 py-1.5 text-xs font-medium text-on-brand transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50"
+            className="min-h-9 rounded-lg bg-brand-600 px-3.5 py-1.5 text-xs font-medium text-on-brand transition-colors hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 disabled:opacity-50"
           >
             Send
           </button>
@@ -247,7 +247,7 @@ export function AnswerFeedback({ config, answerToken }: { config: AnswerFeedback
               setThankedWith('down')
               setPhase('closed')
             }}
-            className="min-h-9 rounded-lg px-2 py-1.5 text-xs text-gray-600 underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50"
+            className="min-h-9 rounded-lg px-2 py-1.5 text-xs text-gray-600 underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 disabled:opacity-50"
           >
             Not now
           </button>
@@ -266,7 +266,7 @@ export function AnswerFeedback({ config, answerToken }: { config: AnswerFeedback
           data-testid="feedback-up"
           disabled={busy}
           onClick={() => void vote('up')}
-          className="flex min-h-9 min-w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50"
+          className="flex min-h-9 min-w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <Thumb />
         </button>
@@ -276,7 +276,7 @@ export function AnswerFeedback({ config, answerToken }: { config: AnswerFeedback
           data-testid="feedback-down"
           disabled={busy}
           onClick={() => void vote('down')}
-          className="flex min-h-9 min-w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50"
+          className="flex min-h-9 min-w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2 disabled:opacity-50"
         >
           <Thumb down />
         </button>

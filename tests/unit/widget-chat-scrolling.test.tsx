@@ -115,7 +115,7 @@ describe('WidgetChat: Jump to latest', () => {
     expect(button).not.toBeNull()
     expect(button.className).toContain('bg-brand-600')
     expect(button.className).toContain('text-on-brand')
-    expect(button.className).toContain('focus-visible:ring-brand-400')
+    expect(button.className).toContain('focus-visible:ring-brand-focus')
 
     fireEvent.click(button)
     expect(metrics.scrollTop).toBe(800)

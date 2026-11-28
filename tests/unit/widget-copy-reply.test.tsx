@@ -124,7 +124,7 @@ describe('CopyReply', () => {
     expect(cls).toContain('motion-reduce:transition-none')
     expect(cls.some((c) => /(^|:)(hidden|invisible)$/.test(c))).toBe(false)
     // Brand colors on hover and focus.
-    expect(cls).toEqual(expect.arrayContaining(['hover:bg-brand-50', 'focus-visible:ring-brand-400']))
+    expect(cls).toEqual(expect.arrayContaining(['hover:bg-brand-50', 'focus-visible:ring-brand-focus']))
   })
 
   it('stays visible while it shows its confirmation, even without hover', async () => {

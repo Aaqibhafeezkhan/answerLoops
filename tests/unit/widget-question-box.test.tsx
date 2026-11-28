@@ -149,9 +149,9 @@ describe('QuestionBox: the box itself', () => {
 
   it('keeps the brand-colored focus ring and send button', () => {
     render(<Harness />)
-    expect(box().className).toContain('focus:ring-brand-100')
+    expect(box().className).toContain('focus:ring-brand-focus/30')
     expect(send().className).toContain('bg-brand-600')
-    expect(send().className).toContain('focus-visible:ring-brand-400')
+    expect(send().className).toContain('focus-visible:ring-brand-focus')
   })
 })
 

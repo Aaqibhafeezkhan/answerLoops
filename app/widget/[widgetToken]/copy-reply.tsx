@@ -52,7 +52,7 @@ export function CopyReply({ bubbleRef }: { bubbleRef: RefObject<HTMLElement | nu
           'transition-opacity duration-150 motion-reduce:transition-none',
           // Brand tint behind dark gray text: brand-50 is always near-white, so the
           // label stays readable whatever brand color the owner picked.
-          'hover:bg-brand-50 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400',
+          'hover:bg-brand-50 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2',
           // Mouse and trackpad: smaller, and hidden until the reply is hovered or focused.
           'pointer-fine:min-h-7',
           status === 'idle'

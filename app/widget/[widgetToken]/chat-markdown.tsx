@@ -33,7 +33,7 @@ const components: Components = {
   code: ({ children }) => <code className="box-decoration-clone rounded bg-gray-200 px-1 py-0.5 font-mono text-[0.92em]">{children}</code>,
   a: ({ href, children }) =>
     isSafeLink(href) ? (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="text-brand-600 underline break-words">
+      <a href={href} target="_blank" rel="noopener noreferrer" className="rounded-sm text-brand-600 underline break-words focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus focus-visible:ring-offset-2">
         {children}
       </a>
     ) : (

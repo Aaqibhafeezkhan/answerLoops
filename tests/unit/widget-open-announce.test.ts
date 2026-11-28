@@ -32,6 +32,7 @@ interface El {
   focus(): void
   setAttribute(k: string, v: string): void
   getAttribute(k: string): string | null
+  removeAttribute(k: string): void
   addEventListener(type: string, fn: () => void): void
   appendChild(c: El): void
   classList: { add(c: string): void; remove(c: string): void }
@@ -62,6 +63,9 @@ function el(tag: string): El {
     },
     getAttribute(k) {
       return k in e.attrs ? e.attrs[k] : null
+    },
+    removeAttribute(k) {
+      delete e.attrs[k]
     },
     addEventListener(type, fn) {
       e.listeners[type] = fn
